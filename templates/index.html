@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sodimac WMS - Gestor de PKTs Inteligente</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-color: #1e293b;
+            --panel-hover: #334155;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --border-color: #334155;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #ef4444, #3b82f6);
+            padding: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            background-color: var(--panel-color);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .status-dot.offline {
+            background-color: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+        }
+
+        .status-dot.online {
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 2rem;
+            flex-grow: 1;
+        }
+
+        .card {
+            background-color: var(--panel-color);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-color);
+            font-family: monospace;
+            font-size: 0.875rem;
+            resize: none;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .source-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-weight: 500;
+        }
+
+        .source-indicator.mock {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background-color: var(--panel-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background-color: rgba(15, 23, 42, 0.3);
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .btn-action {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-action:hover {
+            background-color: #059669;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            gap: 1rem;
+        }
+
+        .empty-state-icon {
+            opacity: 0.4;
+        }
+
+        /* ── MODALS ──────────────────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background-color: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 500px;
+            max-width: 90%;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+
+        .modal-detail-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .modal-detail-value {
+            font-weight: 600;
+            font-family: monospace;
+            color: var(--text-color);
+        }
+
+        .modal-detail-value.highlight {
+            color: var(--success);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        /* ── LOADING SPINNER ─────────────────────────────────────────────── */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .query-card {
+            background-color: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .query-card h3 {
+            font-size: 0.95rem;
+            color: var(--text-color);
+            border-left: 3px solid var(--primary);
+            padding-left: 0.75rem;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .query-card code {
+            display: block;
+            background-color: var(--bg-color);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.72rem;
+            overflow-x: auto;
+            white-space: pre;
+            color: #38bdf8;
+            border: 1px solid rgba(255,255,255,0.02);
+            line-height: 1.4;
+        }
+
+        /* ── FILTROS Y PAGINACIÓN ────────────────────────────────────────── */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .page-size-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .size-select-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .size-select {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            padding: 0.35rem 1.75rem 0.35rem 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.2s ease;
+        }
+
+        .size-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .size-select-icon {
+            position: absolute;
+            right: 0.5rem;
+            pointer-events: none;
+            color: var(--text-muted);
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.4rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .filter-chip:hover {
+            color: var(--text-color);
+            border-color: var(--text-muted);
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .filter-chip.active {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #38bdf8;
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-chip.active i {
+            color: #38bdf8;
+        }
+
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .page-btn {
+            background-color: var(--panel-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background-color: var(--panel-hover);
+            border-color: var(--text-muted);
+        }
+
+        .page-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-btn-arrow {
+            padding: 0 0.5rem;
+            width: auto;
+            min-width: 32px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i data-lucide="shield-check" style="color: white; width: 24px; height: 24px;"></i>
+            </div>
+            <div>
+                <h1>Gestor de PKTs - Sodimac</h1>
+                <div class="subtitle">Buscador y Validador Cruzado WMS & ODBMS/DAD</div>
+            </div>
+        </div>
+        <div class="system-status" id="system-status-container">
+            <div class="status-dot online" id="status-dot-indicator"></div>
+            <span id="status-text-indicator">Conectado a WMS / ODBMS</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- Panel Izquierdo: Buscador e Info de Queries -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="card">
+                <div class="card-title">
+                    <i data-lucide="shield-alert" style="color: var(--primary); width: 20px; height: 20px;"></i>
+                    Buscador Inteligente
+                </div>
+
+                <div class="form-group">
+                    <label for="input-text">Ingresar Reserva o PKT</label>
+                    <textarea id="input-text" placeholder="Ingresa uno o más códigos (Reservas o PKTs) separados por coma o salto de línea.
+
+Ejemplos:
+- Reserva: 35685735
+- PKT: 27911735 o 0027911735"></textarea>
+                    <div class="help-text">
+                        <strong>Lógica de Validación Cruzada:</strong><br>
+                        El sistema consultará los PKTs cancelados en WMS, luego verificará en ODBMS si el estado del pedido es "PENDIENTE BODEGA" y el del PKT es "CANCELADO", y finalmente validará si existe stock disponible del SKU en ODBMS.
+                    </div>
+                </div>
+
+                <button class="btn" id="btn-consultar" onclick="consultarWMS()">
+                    <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                    <span>Consultar y Validar</span>
+                </button>
+            </div>
+
+            <!-- Panel de Consultas ODBMS -->
+            <div class="query-card">
+                <h3><i data-lucide="check-circle" style="width:16px; height:16px; color:var(--success);"></i> Validación ODBMS (Query 3)</h3>
+                <code>SELECT S.SOD_REQ_HDR_ID, PR.PRD_LVL_NUMBER SKU,
+C.REQ_STATUS_DESC ESTADOPEDIDO, A.ASG_STATUS
+FROM SODREOEE S INNER JOIN PRDMSTEE PR...
+WHERE S.SOD_REQ_HDR_ID IN (:ord_nbr)</code>
+
+                <h3><i data-lucide="package" style="width:16px; height:16px; color:var(--success);"></i> Consulta de Stock (Query 4)</h3>
+                <code>SELECT O.ORG_LVL_NUMBER CC, TRIM(P.PRD_LVL_NUMBER) SKU,
+SUM(DECODE(I.INV_TYPE_CODE, '01', I.ON_HAND_QTY, 0)) DISPONIBLE
+FROM INVBALEE I, PRDMSTEE P, ORGMSTEE O...
+WHERE O.ORG_LVL_NUMBER = :cc AND P.PRD_LVL_NUMBER = :sku</code>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Tabla de Resultados y Validaciones -->
+        <div class="results-container">
+            <div class="results-header">
+                <h2 style="font-size: 1.25rem; font-weight: 600;">Resultados WMS y Validación ODBMS</h2>
+                <div class="source-indicator" id="source-badge" style="display: none;">
+                    <i data-lucide="database" style="width: 14px; height: 14px;"></i>
+                    <span id="source-badge-text">WMS / ODBMS Conectados</span>
+                </div>
+            </div>
+
+            <!-- Barra de Filtros y Límite -->
+            <div class="filter-bar" id="table-filter-bar" style="display: none; margin-bottom: 1rem;">
+                <div class="page-size-container">
+                    <span>Mostrar</span>
+                    <div class="size-select-wrapper">
+                        <select class="size-select" id="page-size-select" onchange="changePageSize(this.value)">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="30">30</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="size-select-icon" style="width: 14px; height: 14px;"></i>
+                    </div>
+                    <span>registros</span>
+                </div>
+                <div class="filter-chips">
+                    <button class="filter-chip" id="filter-stock" onclick="toggleFilter('stock')">
+                        <i data-lucide="package-x" style="width: 14px; height: 14px;"></i>
+                        Sin Stock
+                    </button>
+                    <button class="filter-chip" id="filter-active" onclick="toggleFilter('active')">
+                        <i data-lucide="activity" style="width: 14px; height: 14px;"></i>
+                        No Cancelados
+                    </button>
+                    <button class="filter-chip" id="filter-newpkt" onclick="toggleFilter('newpkt')">
+                        <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                        Con Nuevo PKT
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="results-table">
+                    <thead>
+                        <tr>
+                            <th>WHSE</th>
+                            <th>Nro. PKT / Validación ODBMS</th>
+                            <th>Depto</th>
+                            <th>Nro. Orden</th>
+                            <th>Estado WMS</th>
+                            <th>Reserva</th>
+                            <th>Fecha Creación</th>
+                            <th style="text-align: center;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i data-lucide="shield-check" style="width: 48px; height: 48px; color: var(--primary);"></i>
+                                    </div>
+                                    <div style="font-weight: 500; font-size: 1rem; color: var(--text-color);">Listo para Consultar y Validar</div>
+                                    <div style="font-size: 0.875rem;">Ingresa códigos de Reservas o PKTs a la izquierda y presiona "Consultar y Validar"</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Controles de Paginación -->
+            <div class="pagination-bar" id="pagination-controls" style="display: none;">
+                <div id="pagination-info">Mostrando 0 a 0 de 0 registros</div>
+                <div class="pagination-buttons" id="pagination-page-buttons">
+                    <!-- Botones dinámicos de página se insertan aquí -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Confirmación de Creación de PKT -->
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal" style="width: 450px;">
+            <div class="modal-header">
+                <div style="background-color: rgba(239, 68, 68, 0.15); padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="help-circle" style="color: var(--danger); width: 28px; height: 28px;"></i>
+                </div>
+                <div>
+                    <div class="modal-title">Confirmar Generación</div>
+                    <div class="subtitle" style="margin-top: 0;">¿Desea continuar con esta acción?</div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; color: var(--text-color);">
+                    Se generará un nuevo PKT en WMS en base al PKT cancelado <strong id="confirm-pkt-text" style="font-family: monospace;">-</strong>.
+                </p>
+                <div style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.75rem; border-radius: 8px; font-size: 0.825rem; color: var(--success); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                    <i data-lucide="info" style="width: 16px; height: 16px;"></i>
+                    Las validaciones de estado ODBMS y stock disponible se cumplieron exitosamente.
+                </div>
+            </div>
+            <div class="modal-footer" style="gap: 0.75rem;">
+                <button class="btn" style="background-color: var(--panel-hover); color: var(--text-color); border: 1px solid var(--border-color);" onclick="closeConfirmModal()">Cancelar</button>
+                <button class="btn" style="background-color: var(--success);" id="btn-confirm-action">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Éxito de Creación de PKT -->
+    <div class="modal-overlay" id="modal-success">
+        <div class="modal">
+            <div class="modal-header">
+                <div style="background-color: rgba(16, 185, 129, 0.15); padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="check-circle-2" style="color: var(--success); width: 28px; height: 28px;"></i>
+                </div>
+                <div>
+                    <div class="modal-title">Nuevo PKT Generado</div>
+                    <div class="subtitle" style="margin-top: 0;">Proceso de creación finalizado con éxito</div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">PKT Original (Cancelado)</span>
+                    <span class="modal-detail-value" id="modal-pkt-original">-</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Reserva</span>
+                    <span class="modal-detail-value" id="modal-reserva">-</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">NUEVO PKT GENERADO</span>
+                    <span class="modal-detail-value highlight" id="modal-nuevo-pkt">-</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Fecha y Hora</span>
+                    <span class="modal-detail-value" id="modal-fecha">-</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background-color: var(--panel-hover); color: var(--text-color); border: 1px solid var(--border-color);" onclick="closeModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalles de Validación (8 Reglas) -->
+    <div class="modal-overlay" id="modal-details">
+        <div class="modal" style="width: 550px; max-width: 95%;">
+            <div class="modal-header">
+                <div style="background-color: rgba(59, 130, 246, 0.15); padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="info" style="color: var(--primary); width: 28px; height: 28px;"></i>
+                </div>
+                <div>
+                    <div class="modal-title">Detalles de Validación</div>
+                    <div class="subtitle" style="margin-top: 0;">Evaluación de reglas para la reserva</div>
+                </div>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; background-color: rgba(15,23,42,0.2); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Nro. PKT</div>
+                        <div id="detail-pkt-nbr" style="font-weight: 700; font-family: monospace;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Reserva</div>
+                        <div id="detail-reserva-nbr" style="font-weight: 700; font-family: monospace;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Nro. Pedido</div>
+                        <div id="detail-pedido-nbr" style="font-weight: 700; font-family: monospace;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Bodega (WHSE)</div>
+                        <div id="detail-whse-nbr" style="font-weight: 700; font-family: monospace;">-</div>
+                    </div>
+                </div>
+
+                <div id="detail-product-info" style="margin-bottom: 1rem;">
+                    <!-- Información de SKU, descripción, etc. -->
+                </div>
+
+                <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">
+                    Reglas del Motor de Validación
+                </div>
+                <div id="detail-rules-list" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <!-- Lista de las 8 reglas -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background-color: var(--panel-hover); color: var(--text-color); border: 1px solid var(--border-color);" onclick="closeDetailsModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let pendingPktToGenerate = null;
+        let pendingReservaToGenerate = null;
+
+        // Inicializar iconos
+        lucide.createIcons();
+
+        async function consultarWMS() {
+            const inputTextVal = document.getElementById('input-text').value;
+            if (!inputTextVal || !inputTextVal.trim()) {
+                alert('Por favor, ingresa algún valor para realizar la búsqueda.');
+                return;
+            }
+
+            const btnConsultar = document.getElementById('btn-consultar');
+            
+            // Poner botón en estado cargando
+            btnConsultar.disabled = true;
+            btnConsultar.innerHTML = `<i data-lucide="loader-2" class="spinner" style="width: 18px; height: 18px;"></i> <span>Consultando y Validando...</span>`;
+            lucide.createIcons();
+
+            try {
+                const response = await fetch('/api/consultar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        input_text: inputTextVal
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al procesar la consulta.');
+                }
+
+                renderResults(data);
+
+            } catch (error) {
+                console.error(error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                // Restaurar botón
+                btnConsultar.disabled = false;
+                btnConsultar.innerHTML = `<i data-lucide="search" style="width: 18px; height: 18px;"></i> <span>Consultar y Validar</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        let currentPage = 1;
+        let pageSize = 5;
+        let activeFilters = {
+            stock: false,
+            active: false,
+            newpkt: false
+        };
+
+        function renderResults(data) {
+            const badge = document.getElementById('source-badge');
+            const badgeText = document.getElementById('source-badge-text');
+            const statusIndicator = document.getElementById('status-dot-indicator');
+            const statusText = document.getElementById('status-text-indicator');
+
+            badge.style.display = 'flex';
+            if (data.is_mock) {
+                badge.className = 'source-indicator mock';
+                badgeText.innerText = 'Simulación (Offline)';
+                statusIndicator.className = 'status-dot offline';
+                statusText.innerText = 'WMS / ODBMS Desconectados (Mock)';
+            } else {
+                badge.className = 'source-indicator';
+                badgeText.innerText = 'WMS & ODBMS En Línea';
+                statusIndicator.className = 'status-dot online';
+                statusText.innerText = 'Conectado a WMS y ODBMS (Oracle)';
+            }
+
+            window.lastQueryResults = data.results || [];
+
+            // Ordenar por fecha de creación decreciente
+            window.lastQueryResults.sort((a, b) => b.create_date_time.localeCompare(a.create_date_time));
+
+            // Reiniciar estado de filtros y paginación ante una nueva búsqueda
+            currentPage = 1;
+            activeFilters = {
+                stock: false,
+                active: false,
+                newpkt: false
+            };
+            
+            // Desactivar visualmente los chips de filtro
+            document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+
+            processAndRenderResults();
+        }
+
+        function processAndRenderResults() {
+            const results = window.lastQueryResults || [];
+            const filterBar = document.getElementById('table-filter-bar');
+            const paginationBar = document.getElementById('pagination-controls');
+
+            if (results.length === 0) {
+                filterBar.style.display = 'none';
+                paginationBar.style.display = 'none';
+                renderEmptyState();
+                return;
+            }
+
+            // Mostrar barras de filtros y paginación
+            filterBar.style.display = 'flex';
+            paginationBar.style.display = 'flex';
+
+            // 1. Filtrar resultados
+            let filteredResults = results;
+
+            if (activeFilters.stock) {
+                filteredResults = filteredResults.filter(row => 
+                    row.validation && (row.validation.stock_disponible <= 0 || row.validation.rules.r7_stock_suficiente.status === 'rojo')
+                );
+            }
+
+            if (activeFilters.active) {
+                filteredResults = filteredResults.filter(row => row.stat_code !== 99);
+            }
+
+            if (activeFilters.newpkt) {
+                filteredResults = filteredResults.filter(row => {
+                    if (row.stat_code !== 99) return false;
+                    // Un PKT cancelado tiene un nuevo PKT si existe otro PKT activo para la misma reserva u orden
+                    return results.some(otherRow => 
+                        otherRow.pkt_ctrl_nbr !== row.pkt_ctrl_nbr &&
+                        (otherRow.thrd_party_bill === row.thrd_party_bill || otherRow.ord_nbr === row.ord_nbr) &&
+                        otherRow.stat_code !== 99
+                    );
+                });
+            }
+
+            const totalItems = filteredResults.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+
+            // Manejo de límites de página activa
+            if (currentPage > totalPages) {
+                currentPage = Math.max(1, totalPages);
+            }
+
+            const tbody = document.getElementById('results-tbody');
+            if (totalItems === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i data-lucide="filter" style="width: 48px; height: 48px; color: var(--warning);"></i>
+                                </div>
+                                <div style="font-weight: 500; font-size: 1rem; color: var(--text-color);">Sin coincidencias con los filtros activos</div>
+                                <div style="font-size: 0.875rem;">Intenta desactivar algunos filtros para ver más registros.</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                renderPaginationControls(0, 0);
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalItems);
+            const paginatedItems = filteredResults.slice(startIndex, endIndex);
+
+            // 2. Renderizar filas correspondientes a la página
+            renderTableRows(paginatedItems, results);
+
+            // 3. Renderizar controles de paginación
+            renderPaginationControls(totalItems, totalPages);
+        }
+
+        function renderTableRows(paginatedItems, allResults) {
+            const tbody = document.getElementById('results-tbody');
+            tbody.innerHTML = '';
+
+            paginatedItems.forEach((row) => {
+                const tr = document.createElement('tr');
+                
+                // Badge de estado WMS usando la descripción traducida
+                const isCancelled = row.stat_code === 99;
+                const statusBadge = isCancelled 
+                    ? `<span class="badge badge-danger">${row.stat_desc || '99 - Cancelado'}</span>` 
+                    : `<span class="badge badge-success">${row.stat_desc || (row.stat_code + ' - Activo')}</span>`;
+
+                // Procesar validaciones ODBMS
+                let validationDetailsHtml = '';
+                let actionButton = '';
+
+                // Buscar índice original en window.lastQueryResults para conservar funcionalidad del modal
+                const originalIndex = window.lastQueryResults.findIndex(r => r.pkt_ctrl_nbr === row.pkt_ctrl_nbr);
+
+                if (isCancelled && row.validation) {
+                    const v = row.validation;
+                    
+                    // Buscar los motivos de bloqueo (solo si no es válido)
+                    let blockReasons = [];
+                    if (!v.valido && v.rules) {
+                        Object.keys(v.rules).forEach(key => {
+                            const r = v.rules[key];
+                            if (r.status === 'rojo' && key !== 'r8_aprobado_general') {
+                                blockReasons.push(r.desc);
+                            }
+                        });
+                    }
+
+                    // Determinar si ya tiene un nuevo PKT generado
+                    const alreadyHasNew = allResults.some(otherRow => 
+                        otherRow.pkt_ctrl_nbr !== row.pkt_ctrl_nbr &&
+                        (otherRow.thrd_party_bill === row.thrd_party_bill || otherRow.ord_nbr === row.ord_nbr) &&
+                        otherRow.stat_code !== 99
+                    );
+
+                    let reasonsText = v.valido ? 'APTO - Listo para generar' : 'BLOQUEADO';
+                    if (alreadyHasNew) {
+                        reasonsText = 'YA TIENE NUEVO PKT';
+                    } else if (blockReasons.length > 0) {
+                        reasonsText = `BLOQUEADO: ${blockReasons.join(' | ')}`;
+                    }
+
+                    const validationColor = alreadyHasNew ? 'var(--warning)' : (v.valido ? 'var(--success)' : 'var(--danger)');
+                    const validationIcon = alreadyHasNew ? 'refresh-cw' : (v.valido ? 'check-circle-2' : 'alert-circle');
+
+                    validationDetailsHtml = `
+                        <div style="font-size: 0.72rem; color: ${validationColor}; font-weight: 500; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;" title="${reasonsText}">
+                            <i data-lucide="${validationIcon}" style="width: 12px; height: 12px; flex-shrink: 0;"></i>
+                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reasonsText}</span>
+                        </div>
+                    `;
+
+                    // Habilitar botón de acción sólo si es válido y no tiene nuevo PKT
+                    if (alreadyHasNew) {
+                        actionButton = `<button class="btn-action" style="background-color: var(--panel-hover); color: var(--text-muted); border: 1px solid var(--border-color); cursor: not-allowed; box-shadow: none;" disabled title="Ya se generó un PKT activo para esta orden">
+                            <i data-lucide="check" style="width: 14px; height: 14px;"></i> Generado
+                           </button>`;
+                    } else if (v.valido) {
+                        actionButton = `<button class="btn-action" onclick="confirmarGenerar('${row.pkt_ctrl_nbr}', '${row.thrd_party_bill}')">
+                            <i data-lucide="play" style="width: 14px; height: 14px;"></i> Generar PKT
+                           </button>`;
+                    } else {
+                        actionButton = `<button class="btn-action" style="background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; box-shadow: none;" disabled title="${reasonsText}">
+                            <i data-lucide="slash" style="width: 14px; height: 14px;"></i> Bloqueado
+                           </button>`;
+                    }
+                } else {
+                    actionButton = `<span style="color: var(--text-muted); font-size: 0.75rem;">No cancelado</span>`;
+                }
+
+                // Hacer que la reserva sea un link interactivo para el modal
+                const reservaLink = row.thrd_party_bill 
+                    ? `<a href="#" onclick="abrirDetallesModal(${originalIndex}); return false;" style="color: var(--primary); text-decoration: none; border-bottom: 1px dashed var(--primary); cursor: pointer; font-weight: 600;" title="Click para ver detalles completos">${row.thrd_party_bill}</a>`
+                    : '-';
+
+                tr.innerHTML = `
+                    <td>${row.whse || '-'}</td>
+                    <td>
+                        <div style="font-weight: 600; font-family: monospace; font-size: 0.9rem;">${row.pkt_ctrl_nbr || '-'}</div>
+                        ${validationDetailsHtml}
+                    </td>
+                    <td>${row.cust_dept || '-'}</td>
+                    <td>${row.ord_nbr || '-'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${reservaLink}</td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">${row.create_date_time || '-'}</td>
+                    <td style="text-align: center;">${actionButton}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+        }
+
+        function renderPaginationControls(totalItems, totalPages) {
+            const infoDiv = document.getElementById('pagination-info');
+            const buttonsDiv = document.getElementById('pagination-page-buttons');
+
+            if (totalItems === 0) {
+                infoDiv.innerText = 'Mostrando 0 registros';
+                buttonsDiv.innerHTML = '';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * pageSize + 1;
+            const endIndex = Math.min(startIndex + pageSize, totalItems);
+            infoDiv.innerText = `Mostrando ${startIndex} a ${endIndex} de ${totalItems} registros`;
+
+            buttonsDiv.innerHTML = '';
+
+            // Botón Previo
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn page-btn-arrow';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.innerHTML = `<i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>`;
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    processAndRenderResults();
+                }
+            };
+            buttonsDiv.appendChild(prevBtn);
+
+            // Páginas numéricas
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.innerText = i;
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    processAndRenderResults();
+                };
+                buttonsDiv.appendChild(pageBtn);
+            }
+
+            // Botón Siguiente
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn page-btn-arrow';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.innerHTML = `<i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>`;
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    processAndRenderResults();
+                }
+            };
+            buttonsDiv.appendChild(nextBtn);
+
+            lucide.createIcons();
+        }
+
+        function toggleFilter(filterName) {
+            activeFilters[filterName] = !activeFilters[filterName];
+            const chip = document.getElementById(`filter-${filterName}`);
+            if (activeFilters[filterName]) {
+                chip.classList.add('active');
+            } else {
+                chip.classList.remove('active');
+            }
+            currentPage = 1; // Reiniciar a página 1 al filtrar
+            processAndRenderResults();
+        }
+
+        function changePageSize(size) {
+            pageSize = parseInt(size);
+            currentPage = 1; // Reiniciar a página 1 al cambiar límite
+            processAndRenderResults();
+        }
+
+        function renderEmptyState() {
+            const tbody = document.getElementById('results-tbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i data-lucide="search-code" style="width: 48px; height: 48px;"></i>
+                            </div>
+                            <div style="font-weight: 500; font-size: 1rem; color: var(--text-color);">Sin resultados encontrados</div>
+                            <div style="font-size: 0.875rem;">No se encontraron registros de Reservas o PKTs con los valores ingresados.</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            lucide.createIcons();
+        }
+
+        function abrirDetallesModal(index) {
+            const results = window.lastQueryResults;
+            if (!results || !results[index]) return;
+
+            const row = results[index];
+            const v = row.validation;
+
+            document.getElementById('detail-pkt-nbr').innerText = row.pkt_ctrl_nbr || '-';
+            document.getElementById('detail-reserva-nbr').innerText = row.thrd_party_bill || '-';
+            document.getElementById('detail-pedido-nbr').innerText = row.ord_nbr || '-';
+            document.getElementById('detail-whse-nbr').innerText = row.whse || '-';
+
+            const productDiv = document.getElementById('detail-product-info');
+            if (v && v.sku) {
+                productDiv.innerHTML = `
+                    <div style="background-color: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 8px;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Producto Evaluado</div>
+                        <div style="font-weight: 600; font-size: 0.95rem; margin-top: 0.15rem; color: var(--text-color);">
+                            SKU ${v.sku} — ${v.descrip || 'Sin descripción'}
+                        </div>
+                        <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.8rem;">
+                            <div>Cant. Pendiente: <strong style="color: var(--primary);">${parseInt(v.cantidad_pendiente || 0)}</strong></div>
+                            <div>Stock Disp. Bodega: <strong style="${(v.stock_disponible || 0) >= (v.cantidad_pendiente || 0) ? 'color: var(--success);' : 'color: var(--danger);'}">${parseInt(v.stock_disponible || 0)}</strong></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                productDiv.innerHTML = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 0.5rem;">No hay información adicional de producto para este estado.</div>`;
+            }
+
+            const rulesListDiv = document.getElementById('detail-rules-list');
+            rulesListDiv.innerHTML = '';
+
+            if (v && v.rules) {
+                Object.keys(v.rules).forEach(key => {
+                    const rule = v.rules[key];
+                    let dotColor = 'var(--border-color)';
+                    let iconName = 'help-circle';
+                    if (rule.status === 'verde') {
+                        dotColor = 'var(--success)';
+                        iconName = 'check-circle-2';
+                    } else if (rule.status === 'rojo') {
+                        dotColor = 'var(--danger)';
+                        iconName = 'x-circle';
+                    } else if (rule.status === 'amarillo') {
+                        dotColor = 'var(--warning)';
+                        iconName = 'alert-triangle';
+                    }
+
+                    const ruleRow = document.createElement('div');
+                    ruleRow.style.display = 'flex';
+                    ruleRow.style.alignItems = 'flex-start';
+                    ruleRow.style.gap = '0.5rem';
+                    ruleRow.style.fontSize = '0.825rem';
+                    ruleRow.style.padding = '0.4rem 0.5rem';
+                    ruleRow.style.borderRadius = '6px';
+                    if (rule.status === 'rojo') {
+                        ruleRow.style.backgroundColor = 'rgba(239, 68, 68, 0.05)';
+                    }
+
+                    ruleRow.innerHTML = `
+                        <i data-lucide="${iconName}" style="color: ${dotColor}; width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0;"></i>
+                        <span style="color: ${rule.status === 'rojo' ? 'var(--danger)' : 'var(--text-color)'}; font-weight: ${rule.status === 'rojo' ? '600' : 'normal'};">
+                            ${rule.desc}
+                        </span>
+                    `;
+                    rulesListDiv.appendChild(ruleRow);
+                });
+            } else {
+                rulesListDiv.innerHTML = `<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1rem;">
+                    Este PKT no requiere validación detallada por no encontrarse en estado cancelado.
+                </div>`;
+            }
+
+            document.getElementById('modal-details').classList.add('active');
+            lucide.createIcons();
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('modal-details').classList.remove('active');
+        }
+
+        function confirmarGenerar(pktOriginal, reserva) {
+            pendingPktToGenerate = pktOriginal;
+            pendingReservaToGenerate = reserva;
+
+            document.getElementById('confirm-pkt-text').innerText = pktOriginal;
+            document.getElementById('modal-confirm').classList.add('active');
+            
+            document.getElementById('btn-confirm-action').onclick = procederGeneracion;
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('modal-confirm').classList.remove('active');
+            pendingPktToGenerate = null;
+            pendingReservaToGenerate = null;
+        }
+
+        async function procederGeneracion() {
+            const pktOriginal = pendingPktToGenerate;
+            const reserva = pendingReservaToGenerate;
+
+            closeConfirmModal();
+
+            if (!pktOriginal) return;
+
+            try {
+                const response = await fetch('/api/generar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pkt_original: pktOriginal,
+                        reserva: reserva
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al generar el nuevo PKT.');
+                }
+
+                // Cargar datos en modal de éxito
+                document.getElementById('modal-pkt-original').innerText = data.pkt_original;
+                document.getElementById('modal-reserva').innerText = data.reserva || 'No disponible';
+                document.getElementById('modal-nuevo-pkt').innerText = data.nuevo_pkt;
+                document.getElementById('modal-fecha').innerText = data.timestamp;
+
+                // Insertar dinámicamente el nuevo PKT activo en el listado local de resultados
+                const originalRow = window.lastQueryResults.find(r => r.pkt_ctrl_nbr === data.pkt_original);
+                if (originalRow) {
+                    const newRow = {
+                        whse: originalRow.whse,
+                        pkt_ctrl_nbr: data.nuevo_pkt,
+                        cust_dept: originalRow.cust_dept,
+                        ord_nbr: originalRow.ord_nbr,
+                        stat_code: 50, // Estado activo por defecto (ej. Asignado)
+                        stat_desc: '50 - Asignado',
+                        thrd_party_bill: originalRow.thrd_party_bill,
+                        create_date_time: data.timestamp,
+                        validation: null
+                    };
+                    window.lastQueryResults.unshift(newRow);
+                    processAndRenderResults();
+                }
+
+                // Mostrar modal de éxito
+                document.getElementById('modal-success').classList.add('active');
+
+            } catch (error) {
+                console.error(error);
+                alert(`Error al generar PKT: ${error.message}`);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal-success').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

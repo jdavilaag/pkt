@@ -1,0 +1,612 @@
+PLAN DE DESARROLLO
+Sistema web para validación y generación de nuevos PKT
+1. Objetivo general
+
+Desarrollar una aplicación web que permita ingresar una reserva o un número de PKT, realizar automáticamente las validaciones correspondientes en las bases de datos WMS y ODBMS, mostrar únicamente la información relevante del pedido y habilitar la generación de un nuevo PKT cuando se cumplan todas las condiciones establecidas.
+
+2. Alcance del sistema
+
+La aplicación permitirá:
+
+Ingresar una reserva o número de PKT.
+Identificar automáticamente el tipo de dato ingresado.
+Obtener la reserva cuando el usuario ingrese un PKT.
+Consultar el número de pedido ORD_NBR.
+Consultar el estado del pedido y sus productos.
+Validar el estado del PKT.
+Calcular la cantidad pendiente por despachar.
+Verificar si existe otro PKT activo.
+Consultar el inventario disponible por SKU y bodega.
+Mostrar el resultado de cada validación.
+Habilitar o bloquear el botón Generar nuevo PKT.
+Registrar el resultado de la validación y las acciones realizadas.
+
+El sistema no mostrará directamente las consultas SQL ni campos técnicos innecesarios para el usuario.
+
+3. Tecnologías propuestas
+Frontend
+HTML5.
+CSS3.
+JavaScript.
+Bootstrap 5.
+Jinja2 para integrar las vistas con Flask.
+Backend
+Python.
+Flask.
+API REST interna.
+Manejo de sesiones y perfiles de usuario.
+Bases de datos
+WMS para las consultas relacionadas con PKT_HDR y PKT_HDR_INTRNL.
+ODBMS para pedidos, asignaciones e inventario.
+Base de datos adicional para auditoría, historial y configuración del sistema.
+Conectividad
+oracledb o cx_Oracle para Oracle.
+Variables de entorno para las credenciales.
+Pool de conexiones para mejorar el rendimiento.
+4. Arquitectura propuesta
+
+La aplicación estará organizada en cuatro capas:
+
+Capa de presentación
+
+Contendrá los formularios, tarjetas, tablas, indicadores y botones que visualizará el usuario.
+
+Capa de controladores
+
+Recibirá la reserva o PKT ingresado, validará el formato y coordinará la ejecución de las consultas.
+
+Capa de servicios
+
+Contendrá las reglas del negocio:
+
+Obtener reserva.
+Obtener pedido.
+Validar PKT cancelado.
+Validar pedido pendiente.
+Validar cantidad pendiente.
+Validar PKT activo existente.
+Validar inventario.
+Determinar si se puede generar un nuevo PKT.
+Capa de acceso a datos
+
+Contendrá las conexiones y consultas SQL para WMS y ODBMS.
+
+5. Fases del desarrollo
+Fase 1. Levantamiento y definición de reglas
+Actividades
+Documentar el proceso actual.
+Confirmar el significado de cada estado.
+Identificar los códigos de estado de WMS y ODBMS.
+Definir cuándo un PKT se considera cancelado.
+Definir cuándo un PKT se considera activo.
+Definir cómo se determina la cantidad pendiente.
+Definir qué bodega se debe consultar para cada SKU.
+Confirmar el procedimiento técnico para generar un nuevo PKT.
+Identificar los permisos necesarios para consultar y ejecutar procesos.
+Reglas iniciales
+
+El sistema podrá generar un PKT cuando:
+
+La reserva exista.
+El pedido ORD_NBR exista.
+El PKT anterior esté cancelado.
+El pedido-SKU esté en estado PENDIENTE BODEGA.
+La cantidad pendiente sea mayor que cero.
+No exista otro PKT activo para el mismo pedido y SKU.
+El inventario disponible sea igual o mayor que la cantidad pendiente.
+El usuario tenga permiso para generar PKT.
+Entregables
+Documento de reglas del negocio.
+Flujo funcional aprobado.
+Diccionario de estados.
+Lista de campos relevantes.
+Fase 2. Diseño funcional y visual
+Actividades
+
+Diseñar la pantalla principal con las siguientes secciones:
+
+Campo para ingresar reserva o PKT.
+Botón Validar.
+Tarjeta de datos generales.
+Lista de validaciones.
+Tabla de productos.
+Resultado final.
+Botón Generar nuevo PKT.
+Mensajes de error o advertencia.
+Historial de consultas.
+Datos generales visibles
+Reserva.
+Número de pedido.
+PKT consultado.
+Bodega.
+Estado del PKT.
+Estado del pedido.
+Fecha de creación.
+Datos por producto
+SKU.
+Descripción.
+Cantidad pedida.
+Cantidad cancelada.
+Cantidad despachada.
+Cantidad pendiente.
+Cantidad disponible.
+Resultado de validación.
+Entregables
+Prototipo de pantalla.
+Diseño responsive.
+Catálogo de mensajes.
+Definición de colores e indicadores.
+Fase 3. Configuración del proyecto
+Actividades
+Crear el repositorio Git.
+Crear la estructura del proyecto Flask.
+Configurar el entorno virtual.
+Crear el archivo requirements.txt.
+Configurar variables de entorno.
+Crear archivos de configuración.
+Implementar manejo centralizado de errores.
+Configurar logs.
+Separar entornos de desarrollo, prueba y producción.
+Estructura propuesta
+pkt_validator/
+│
+├── app.py
+├── config.py
+├── requirements.txt
+├── .env
+├── .gitignore
+│
+├── routes/
+│   ├── validation_routes.py
+│   └── pkt_routes.py
+│
+├── services/
+│   ├── validation_service.py
+│   ├── reservation_service.py
+│   ├── inventory_service.py
+│   └── pkt_generation_service.py
+│
+├── repositories/
+│   ├── wms_repository.py
+│   ├── odbms_repository.py
+│   └── audit_repository.py
+│
+├── models/
+│   ├── validation_result.py
+│   └── product_result.py
+│
+├── templates/
+│   ├── layout.html
+│   ├── index.html
+│   └── components/
+│       ├── search_form.html
+│       ├── general_data.html
+│       ├── validation_list.html
+│       └── product_table.html
+│
+├── static/
+│   ├── css/
+│   └── js/
+│
+└── tests/
+    ├── test_validation_service.py
+    ├── test_wms_repository.py
+    └── test_routes.py
+Entregables
+Proyecto base funcionando.
+Conexiones configuradas.
+Página inicial disponible.
+Repositorio versionado.
+Fase 4. Desarrollo del módulo de identificación
+Actividades
+Crear el campo de entrada.
+Limpiar espacios y caracteres inválidos.
+Validar que el dato sea numérico.
+Identificar si corresponde a reserva o PKT.
+Normalizar el PKT con ceros iniciales cuando corresponda.
+Mostrar mensajes claros cuando el valor no sea válido.
+Reglas propuestas
+Un valor que comienza con 00 será tratado inicialmente como PKT.
+Los demás valores serán tratados inicialmente como reserva.
+La identificación final se confirmará mediante consulta en la base de datos.
+No se utilizará únicamente la longitud del dato para determinar el tipo.
+Entregables
+Formulario de búsqueda.
+Validación del dato ingresado.
+Identificación automática de reserva o PKT.
+Fase 5. Desarrollo de consultas WMS
+Actividades
+Implementar el Query 2 para buscar la reserva mediante un PKT.
+Obtener el campo THRD_PARTY_BILL.
+Ejecutar el Query 1 siempre utilizando la reserva.
+Obtener:
+WHSE.
+PKT_CTRL_NBR.
+ORD_NBR.
+STAT_CODE.
+THRD_PARTY_BILL.
+CREATE_DATE_TIME.
+Manejar reservas con varios PKT.
+Ordenar los PKT por fecha.
+Identificar el PKT más reciente.
+Traducir códigos de estado a descripciones.
+Entregables
+Servicio de consulta WMS.
+Obtención automática de la reserva.
+Obtención del pedido.
+Lista de PKT relacionados.
+Fase 6. Desarrollo de consultas ODBMS
+Actividades
+Ejecutar el Query 3 utilizando el ORD_NBR.
+Obtener los productos asociados.
+Calcular la cantidad pendiente.
+Traducir el estado de la asignación.
+Determinar el estado general del pedido.
+Ejecutar el Query 4 por cada combinación de SKU y bodega.
+Obtener el saldo disponible.
+Consolidar los resultados.
+Información obtenida
+Pedido.
+Orden de compra.
+Reserva.
+SKU.
+Bodega.
+Tienda de destino.
+Estado del pedido.
+Cantidad pedida.
+Cantidad cancelada.
+Cantidad despachada.
+Cantidad pendiente.
+Estado del PKT.
+Inventario disponible.
+Entregables
+Servicio de consulta ODBMS.
+Cálculo de cantidades.
+Consulta de inventario.
+Resultado consolidado por SKU.
+Fase 7. Implementación de las reglas de validación
+Validación 1: existencia de la reserva
+
+Debe existir al menos un registro asociado a la reserva.
+
+Validación 2: existencia del pedido
+
+El campo ORD_NBR debe estar informado y el pedido debe existir en ODBMS.
+
+Validación 3: PKT cancelado
+
+El PKT debe encontrarse en el código de estado definido como cancelado.
+
+Validación 4: pedido pendiente
+
+El pedido-SKU debe encontrarse en estado PENDIENTE BODEGA.
+
+Validación 5: cantidad pendiente
+
+La fórmula será:
+
+Cantidad pendiente =
+Cantidad asignada
+- Cantidad cancelada
+- Cantidad despachada
+
+El resultado debe ser mayor que cero.
+
+Validación 6: PKT activo existente
+
+Se debe verificar que no exista otro PKT activo para:
+
+La misma reserva.
+El mismo pedido.
+El mismo SKU.
+La misma bodega.
+La misma cantidad pendiente.
+Validación 7: inventario suficiente
+
+Se debe cumplir:
+
+Disponible >= Cantidad pendiente
+
+La validación debe realizarse individualmente por SKU.
+
+Validación 8: resultado general
+
+El resultado general será aprobado solamente cuando todos los productos pendientes cumplan las condiciones.
+
+Entregables
+Motor de validaciones.
+Resultado individual por SKU.
+Resultado general del pedido.
+Lista de motivos de bloqueo.
+Fase 8. Desarrollo de la interfaz de resultados
+Actividades
+Mostrar un indicador de carga durante las consultas.
+Mostrar datos generales.
+Mostrar las validaciones aprobadas.
+Mostrar advertencias.
+Mostrar errores.
+Crear una tabla de productos.
+Permitir expandir detalles técnicos.
+Mostrar el resultado general.
+Habilitar o deshabilitar el botón de generación.
+Estados visuales
+Verde: validación correcta.
+Rojo: validación incorrecta.
+Amarillo: advertencia.
+Gris: validación pendiente.
+Ejemplo de resultado aprobado
+APTO PARA GENERAR NUEVO PKT
+
+La reserva, el pedido, el estado y el inventario cumplen
+con las condiciones definidas.
+Ejemplo de resultado bloqueado
+NO APTO PARA GENERAR NUEVO PKT
+
+Motivo:
+Ya existe un PKT activo para el SKU 4460308.
+Entregables
+Pantalla de resultados.
+Tabla dinámica de productos.
+Botón controlado por reglas.
+Fase 9. Desarrollo de la generación del PKT
+
+Esta fase debe iniciarse únicamente después de confirmar el procedimiento oficial de generación.
+
+Actividades
+Crear un endpoint exclusivo para generar PKT.
+Volver a ejecutar las validaciones antes de generar.
+Solicitar confirmación al usuario.
+Evitar dobles clics.
+Generar un identificador único de operación.
+Ejecutar el procedimiento autorizado.
+Obtener el nuevo número de PKT.
+Registrar el resultado.
+Mostrar la confirmación.
+Confirmación propuesta
+¿Confirma la generación de un nuevo PKT?
+
+Reserva: 35685735
+Pedido: 4988900
+Cantidad total pendiente: 1
+Controles obligatorios
+No confiar en las validaciones realizadas previamente.
+Revalidar inventario y PKT activos.
+Bloquear solicitudes duplicadas.
+Ejecutar la operación dentro de una transacción.
+Realizar rollback en caso de error.
+Registrar usuario, fecha, reserva y resultado.
+Entregables
+Botón funcional.
+Confirmación previa.
+Nuevo número de PKT.
+Manejo de errores y transacciones.
+Fase 10. Seguridad y auditoría
+Actividades
+Implementar autenticación.
+Crear roles.
+Separar permisos de consulta y generación.
+No exponer credenciales.
+Proteger las consultas contra inyección SQL.
+Utilizar parámetros en todos los queries.
+Registrar las acciones del usuario.
+Aplicar tiempo de expiración de sesión.
+Restringir el acceso por red cuando sea necesario.
+Roles propuestos
+Consulta
+
+Puede ingresar una reserva o PKT y visualizar las validaciones.
+
+Operador
+
+Puede validar y generar nuevos PKT.
+
+Administrador
+
+Puede revisar auditoría, configurar estados y administrar usuarios.
+
+Datos de auditoría
+Usuario.
+Fecha y hora.
+IP o equipo.
+Valor ingresado.
+Reserva.
+Pedido.
+PKT anterior.
+Resultado de la validación.
+Nuevo PKT generado.
+Mensaje de error.
+Duración del proceso.
+Entregables
+Módulo de acceso.
+Perfiles y permisos.
+Historial de operaciones.
+Registro de errores.
+Fase 11. Pruebas
+Pruebas unitarias
+Identificación de reserva.
+Identificación de PKT.
+Cálculo de cantidad pendiente.
+Conversión de estados.
+Validación de inventario.
+Validación de PKT activo.
+Resultado general.
+Pruebas de integración
+Conexión WMS.
+Conexión ODBMS.
+Consulta por reserva.
+Consulta por PKT.
+Consulta con múltiples SKU.
+Consulta de inventario.
+Generación del PKT.
+Casos de prueba principales
+Reserva válida y apta.
+PKT válido y apto.
+Reserva inexistente.
+PKT inexistente.
+Reserva sin ORD_NBR.
+PKT no cancelado.
+Pedido no pendiente.
+Cantidad pendiente igual a cero.
+Inventario insuficiente.
+Otro PKT activo existente.
+Pedido con varios SKU.
+Un SKU aprobado y otro rechazado.
+Caída de conexión WMS.
+Caída de conexión ODBMS.
+Doble clic en generar.
+Dos usuarios intentando generar simultáneamente.
+Entregables
+Plan de pruebas.
+Evidencias.
+Registro de incidencias.
+Informe de aprobación.
+Fase 12. Despliegue
+Actividades
+Preparar el servidor.
+Configurar Python y las dependencias.
+Configurar Oracle Instant Client.
+Configurar variables de entorno.
+Crear el servicio de ejecución.
+Configurar HTTPS.
+Configurar logs.
+Configurar respaldo de auditoría.
+Realizar pruebas de humo.
+Elaborar plan de reversión.
+Entregables
+Aplicación instalada.
+Manual técnico.
+Manual de usuario.
+Plan de respaldo.
+Plan de reversión.
+Fase 13. Capacitación y puesta en producción
+Actividades
+Capacitar a los usuarios.
+Explicar el significado de los resultados.
+Explicar cuándo se habilita el botón.
+Explicar los motivos de bloqueo.
+Ejecutar un piloto controlado.
+Monitorear errores.
+Recoger observaciones.
+Liberar la versión final.
+Entregables
+Manual de usuario.
+Sesión de capacitación.
+Registro de observaciones.
+Acta de puesta en producción.
+6. Cronograma propuesto
+Fase	Actividad	Duración estimada
+1	Reglas y análisis del proceso	3 días
+2	Diseño funcional y visual	3 días
+3	Configuración del proyecto	2 días
+4	Identificación de reserva o PKT	2 días
+5	Integración con WMS	4 días
+6	Integración con ODBMS	5 días
+7	Motor de validaciones	4 días
+8	Interfaz de resultados	4 días
+9	Generación del PKT	5 días
+10	Seguridad y auditoría	3 días
+11	Pruebas	5 días
+12	Despliegue	2 días
+13	Capacitación y piloto	3 días
+
+Duración estimada total: entre 35 y 44 días laborables, dependiendo del acceso a las bases de datos, la disponibilidad del ambiente de pruebas y la complejidad del procedimiento utilizado para generar el nuevo PKT.
+
+7. Priorización por versiones
+Versión 1: módulo de validación
+
+Debe incluir:
+
+Ingreso de reserva o PKT.
+Consultas WMS.
+Consultas ODBMS.
+Validación de estados.
+Cálculo de cantidad pendiente.
+Validación de inventario.
+Validación de PKT activo.
+Visualización de resultados.
+Botón de generación visible, pero todavía no operativo.
+Versión 2: generación controlada
+
+Debe incluir:
+
+Confirmación de usuario.
+Revalidación.
+Ejecución de generación.
+Prevención de duplicados.
+Auditoría.
+Mensaje con el nuevo PKT.
+Versión 3: administración y reportes
+
+Debe incluir:
+
+Historial de consultas.
+Reportes de PKT generados.
+Usuarios y roles.
+Configuración de estados.
+Métricas de tiempos.
+Exportación a Excel.
+8. Endpoints propuestos
+Consultar una reserva o PKT
+POST /api/validaciones
+
+Entrada:
+
+{
+  "valor": "0027911735"
+}
+Consultar el detalle de una validación
+GET /api/validaciones/{id}
+Generar un nuevo PKT
+POST /api/pkt/generar
+
+Entrada:
+
+{
+  "validacion_id": "VAL-20260724-0001"
+}
+Consultar historial
+GET /api/historial
+9. Criterios de aceptación
+
+El módulo de validación será aceptado cuando:
+
+El usuario pueda ingresar una reserva o PKT.
+El sistema reconozca correctamente el dato.
+Cuando se ingrese un PKT, el sistema obtenga la reserva.
+Todas las consultas posteriores se ejecuten utilizando la reserva y el pedido relacionado.
+El sistema muestre los SKU pendientes.
+La cantidad pendiente se calcule correctamente.
+El sistema identifique PKT activos.
+El sistema consulte el inventario disponible.
+El botón permanezca bloqueado cuando alguna validación falle.
+El botón se habilite cuando todas las condiciones se cumplan.
+Los mensajes indiquen claramente el motivo del resultado.
+Las consultas utilicen parámetros y no concatenación directa.
+Los errores técnicos no se muestren directamente al usuario.
+10. Riesgos del proyecto
+Riesgo	Impacto	Medida preventiva
+Diferencias entre los estados WMS y ODBMS	Alto	Crear catálogo oficial de equivalencias
+Datos desactualizados entre sistemas	Alto	Revalidar antes de generar
+Generación duplicada	Crítico	Bloqueo, transacción e identificador único
+Inventario modificado durante la operación	Alto	Consultar nuevamente antes de confirmar
+Caída de Oracle	Alto	Manejo de timeout y mensajes controlados
+Consulta lenta por múltiples SKU	Medio	Pool de conexiones y consultas optimizadas
+PKT con formato inesperado	Medio	Validar mediante consulta y no solo por prefijo
+Credenciales expuestas	Crítico	Variables de entorno y permisos mínimos
+Procedimiento de generación no documentado	Crítico	No desarrollar la ejecución hasta aprobar el proceso
+11. Resultado esperado
+
+Al finalizar el desarrollo, el usuario podrá realizar todo el proceso desde una sola pantalla:
+
+Ingresa una reserva o PKT.
+El sistema identifica el dato.
+Obtiene la reserva cuando sea necesario.
+Localiza el pedido.
+Consulta los productos.
+Evalúa los estados.
+Calcula la cantidad pendiente.
+Verifica si existe otro PKT activo.
+Consulta el inventario disponible.
+Muestra un resumen de las validaciones.
+Habilita la generación únicamente cuando todo se encuentre conforme.
+Registra la operación para efectos de auditoría.
